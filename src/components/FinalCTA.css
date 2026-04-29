@@ -1,0 +1,54 @@
+.final-cta-section {
+  background-color: #C6F64A; /* Thrive Lime Green */
+  padding: 90px 20px;
+  text-align: center;
+  color: #1a1a1a;
+}
+
+.cta-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.cta-heading {
+  font-family: 'Inter', sans-serif; /* Standard bold sans-serif */
+  font-size: 80px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -2px;
+  margin-bottom: 20px;
+  color: #2e2e2e;
+}
+
+.cta-subtext {
+  margin-bottom: 40px;
+}
+
+.cta-link {
+  font-size: 12px;
+  color: #8B9B5F;
+  opacity: 0.8;
+}
+
+.cta-black-btn {
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  padding: 18px 45px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: transform 0.2s ease;
+}
+
+.cta-black-btn:hover {
+  transform: scale(1.05);
+}
+
+/* Tablet/Mobile sizing */
+@media (max-width: 768px) {
+  .cta-heading {
+    font-size: 48px;
+  }
+}

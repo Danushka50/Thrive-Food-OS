@@ -1,0 +1,35 @@
+/* Previous styles remain the same, update these specific ones: */
+
+.otp-box {
+    width: 55px;
+    height: 65px;
+    background: #262626;
+    border: 2px solid transparent; /* Added for focus state */
+    border-radius: 5px;
+    display: flex;
+    text-align: center; /* Centers the text in input */
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 900;
+    color: #d4ff3f;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.otp-box:focus {
+    border-color: #d4ff3f;
+    background: #2d331a; /* Subtle lime tint on focus */
+}
+
+/* Style for when the box has no value */
+.otp-box.empty {
+    color: transparent;
+    /* border-bottom: 0px solid #444;  */
+}
+
+/* Chrome, Safari, Edge, Opera - Remove arrows */
+.otp-box::-webkit-outer-spin-button,
+.otp-box::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

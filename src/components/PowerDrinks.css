@@ -1,0 +1,148 @@
+.power-drinks-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 80px 60px;
+}
+
+.power-drinks-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  /* gap: 10px; */
+}
+
+.power-drinks-header p {
+  font-size: 14px;
+  color: #C6F64A;
+}
+
+.power-drinks-header h2 {
+  font-size: 26px;
+  color: #ffffff;
+  margin-top: 10px;
+  line-height: 0.5;
+}
+
+.power-drinks-cards-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.power-drinks-description {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #ffffff;
+  max-width: 600px;
+  text-align: left;
+  line-height: 1.2;
+  width: 60%;
+}
+
+.power-drink-image {
+  margin-top: 10px;
+  width: 600px;
+  height: auto;
+  display: block;
+  align-items: flex-start;
+}
+
+.power-drinks-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 10px;
+  background-color: #242424;
+  padding: 0px 20px 20px 20px;
+}
+
+.power-drinks-card h3 {
+  font-size: 18px;
+  color: #ffffff;
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.ingredients {
+  font-size: 11px;
+  text-align: left;
+  color: #8A8888;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.description {
+  font-size: 11px;
+  text-align: left;
+  color: #C3C3C3;
+  line-height: 1;
+}
+
+@media (max-width: 1024px) {
+  .power-drinks-container {
+    padding: 60px 30px;
+    align-items: flex-start;
+  }
+
+  .power-drinks-header h2 {
+    font-size: 22px;
+    line-height: 1.1;
+  }
+
+  .power-drinks-cards-container {
+    flex-direction: column;
+    gap: 20px;
+    align-items: stretch;
+    margin-top: 24px;
+  }
+
+  .power-drinks-description {
+    width: 100%;
+    max-width: 100%;
+    margin-top: 16px;
+  }
+
+  .power-drink-image {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .power-drinks-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .power-drinks-container {
+    padding: 40px 16px;
+  }
+
+  .power-drinks-header p {
+    font-size: 12px;
+  }
+
+  .power-drinks-header h2 {
+    font-size: 20px;
+  }
+
+  .power-drinks-description {
+    font-size: 13px;
+  }
+
+  .power-drinks-card {
+    padding: 16px 14px 16px 14px;
+  }
+
+  .power-drinks-card h3 {
+    font-size: 16px;
+  }
+
+  .ingredients,
+  .description {
+    font-size: 10px;
+  }
+}

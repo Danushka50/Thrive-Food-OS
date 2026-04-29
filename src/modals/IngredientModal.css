@@ -1,0 +1,120 @@
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.ingredient-modal {
+  background: #141414;
+  width: 500px;
+  border-radius: 12px;
+  border: 1px solid #222;
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 20px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #222;
+}
+
+.modal-header h3 { margin: 0; font-size: 18px; }
+.close-x { background: none; border: none; color: #555; font-size: 24px; cursor: pointer; }
+
+.modal-body { padding: 25px; }
+
+.selection-group { margin-bottom: 25px; }
+.selection-group label {
+  display: block;
+  font-size: 10px;
+  color: #666;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+
+.option-grid { display: flex; gap: 10px; }
+.opt-btn {
+  background: #222;
+  border: 1px solid #333;
+  color: #888;
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.opt-btn.active {
+  background: #232a14;
+  border-color: #b5ff00;
+  color: #b5ff00;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.quantity-control button {
+  width: 40px;
+  height: 40px;
+  background: #222;
+  border: none;
+  color: #888;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.gram-val { font-size: 24px; font-weight: 800; margin-right: 8px; }
+.gram-unit { font-size: 12px; color: #444; }
+
+.modal-macros-row {
+  background: #000;
+  display: flex;
+  padding: 20px 0;
+  border-top: 1px solid #222;
+  border-bottom: 1px solid #222;
+}
+
+.m-unit { flex: 1; text-align: center; }
+.m-unit strong { display: block; color: #b5ff00; font-size: 20px; }
+.m-unit span { font-size: 10px; color: #444; text-transform: uppercase; }
+
+.modal-footer { padding: 25px; }
+
+.price-display {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+}
+
+.price-display strong { font-size: 22px; }
+
+.modal-actions { display: flex; gap: 15px; }
+
+.cancel-btn {
+  flex: 1;
+  background: #222;
+  border: none;
+  color: #666;
+  padding: 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.add-plate-btn {
+  flex: 2;
+  background: #b5ff00;
+  color: #000;
+  border: none;
+  padding: 15px;
+  font-weight: 800;
+  border-radius: 4px;
+  cursor: pointer;
+}

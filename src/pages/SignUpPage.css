@@ -1,0 +1,438 @@
+:root {
+    --bg-deep: #0a0a0a;
+    --card-grey: #1c1c1c;
+    --lime: #d4ff3f;
+    --text-grey: #a1a1a1;
+}
+
+.landing-wrapper {
+    background-color: var(--bg-deep);
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    padding: 20px 80px;
+}
+
+/* The massive background text */
+.bg-watermark {
+    position: absolute;
+    top: 50%;
+    left: 45%;
+    transform: translate(-50%, -50%);
+    font-size: 20vw;
+    font-weight: 900;
+    font-family: 'Sakana';
+    color: #3C3C3C;
+    /* Just slightly lighter than BG */
+    z-index: 0;
+    pointer-events: none;
+    letter-spacing: -1vw;
+}
+
+.navbar {
+    display: flex;
+    justify-content: flex-end;
+    position: relative;
+    z-index: 10;
+}
+
+.logo-text {
+    color: var(--lime);
+    font-weight: 900;
+    font-size: 24px;
+    font-family: 'Sakana';
+}
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    align-items: center;
+    position: relative;
+    z-index: 5;
+    /* margin-top: 20px; */
+}
+
+.hero-left {
+    width: 80%;
+}
+
+.hero-title {
+    font-size: 36px;
+    max-width: 500px;
+    line-height: 1.2;
+    color: #3C3C3C;
+    font-weight: 600;
+    /* Faded state based on image */
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.hero-subtitle {
+    color: var(--text-grey);
+    font-size: 10px;
+    line-height: 1.6;
+    text-align: left;
+}
+
+/* Decorative Plates */
+.food-decor {
+    position: relative;
+    height: 400px;
+    margin-top: 40px;
+}
+
+.plate {
+    position: absolute;
+    border-radius: 50%;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.plate-lg {
+    width: 280px;
+    z-index: 3;
+    top: 80px;
+    left: 0;
+}
+
+.plate-sm {
+    width: 130px;
+    z-index: 4;
+}
+
+.plate-sm.top {
+    top: -40px;
+    left: 260px;
+}
+
+.plate-sm.bottom {
+    width: 160px;
+    top: 320px;
+    left: 300px;
+}
+
+.flow-container {
+    background-color: #0a0a0a;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+}
+
+.form-card {
+    background: #1c1c1c;
+    width: 90%;
+    height: 75%;
+    max-width: 480px;
+    padding: 50px;
+    border-radius: 8px;
+    z-index: 10;
+    margin-top: 100px;
+}
+
+.title {
+    color: #fff;
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    color: #737373;
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.subtitle-otp {
+    color: #737373;
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.timer {
+    color: #737373;
+    font-size: 13px;
+    margin-bottom: 40px;
+}
+
+.resend-text {
+    color: #fff;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.resend-link {
+    background: none;
+    border: none;
+    color: #737373;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    margin-left: 5px;
+}
+
+.grid-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    font-size: 11px;
+    color: #a1a1a1;
+    font-weight: 700;
+    margin-bottom: 3px;
+}
+
+.input-group input {
+    width: 100%;
+    background: #262626;
+    border: none;
+    padding: 14px;
+    border-radius: 5px;
+    color: #fff;
+    box-sizing: border-box;
+}
+
+/* Password Strength Bars */
+.strength-meter {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+    transition: color 0.3s ease;
+}
+
+.bar {
+    height: 4px;
+    flex: 1;
+    background: #333;
+    border-radius: 2px;
+}
+
+.bar.active {
+    background: #d4ff3f;
+}
+
+.strength-label {
+    font-size: 12px;
+    color: #d4ff3f;
+    margin-top: 5px;
+    display: block;
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+/* Requirements Box */
+.requirements-box {
+    border: 1px solid #303030;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+.requirements label {
+    display: block;
+    font-size: 11px;
+    color: #a1a1a1;
+    font-weight: 700;
+    margin-bottom: 3px;
+    text-align: left;
+}
+
+.req-title {
+    font-size: 11px;
+    color: #737373;
+    margin-bottom: 8px;
+}
+
+.requirements-box ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.requirements-box li {
+    color: #737373;
+    list-style: none;
+    font-size: 11px;
+    transition: color 0.3s ease;
+}
+
+.requirements-box li.valid {
+    color: #d4ff3f;
+}
+
+/* Global Button */
+.primary-btn {
+    width: 100%;
+    background: #d4ff3f;
+    color: #000;
+    border: none;
+    padding: 16px;
+    border-radius: 5px;
+    font-weight: 900;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 30px;
+}
+
+.info-box {
+    background-color: rgba(45, 51, 26, 0.4);
+    /* Dark olive/lime tint */
+    border: 1px solid #2d331a;
+    /* Subtle border */
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 30px;
+
+    /* Text styling */
+    color: #d4ff3f;
+    /* Bright lime green */
+    font-size: 11px;
+    line-height: 1.5;
+    text-align: left;
+}
+
+.input-wrapper-inline {
+    position: relative;
+    width: 100%;
+}
+
+.input-error {
+    /* border: 1px solid #ff4d4d !important; */
+    background: rgba(255, 77, 77, 0.05) !important;
+}
+
+.error-icon-inline {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #ff4d4d;
+    font-size: 14px;
+    pointer-events: none;
+}
+
+.success-icon-inline {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #d4ff3f; /* Your brand lime green */
+    font-size: 14px;
+    pointer-events: none;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+    .otp-card {
+        margin: 20px;
+        padding: 40px 20px;
+    }
+
+    .otp-box {
+        width: 50px;
+        height: 60px;
+        font-size: 24px;
+    }
+}
+
+/* --- RESPONSIVE STYLES --- */
+
+@media (max-width: 1024px) {
+    .landing-wrapper {
+        padding: 20px 40px;
+        overflow-y: auto;
+        /* Allow scrolling on smaller screens */
+    }
+
+    .hero-content {
+        grid-template-columns: 1fr;
+        /* Stack columns vertically */
+        gap: 40px;
+        text-align: center;
+    }
+
+    .hero-left {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .hero-title {
+        font-size: 28px;
+        text-align: center;
+        max-width: 100%;
+    }
+
+    .hero-subtitle {
+        text-align: center;
+    }
+
+    .login-card {
+        width: 100%;
+        /* Card takes full width */
+        max-width: 440px;
+        margin: 40px auto;
+        /* Center the card */
+    }
+
+    /* Adjust the massive background text so it doesn't cause overflow */
+    .bg-watermark {
+        font-size: 40vw;
+        opacity: 0.5;
+    }
+}
+
+@media (max-width: 768px) {
+    .landing-wrapper {
+        padding: 20px 20px;
+    }
+
+    /* Handle the food plates for mobile */
+    .food-decor {
+        height: 300px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .plate-lg {
+        width: 200px;
+        position: relative;
+        /* Remove absolute positioning to center easily */
+        top: 0;
+        left: 0;
+    }
+
+    /* Hide smaller plates on mobile to reduce clutter, or scale them down */
+    .plate-sm {
+        display: none;
+    }
+
+    .social-grid {
+        grid-template-columns: 1fr;
+        /* Stack FB and Google buttons */
+    }
+
+    .phone-input {
+        width: 100%;
+        /* Adjust padding box-sizing issues */
+        box-sizing: border-box;
+    }
+}

@@ -1,0 +1,124 @@
+.leaderboard-section {
+  padding: 60px 60px;
+  text-align: left;
+}
+
+.leaderboard-header {
+  margin-bottom: 30px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.top-tag {
+  color: #b5ff00;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.leaderboard-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #161616;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* --- The Row --- */
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  padding: 30px 40px;
+  border-bottom: 1px solid #222;
+  transition: background-color 0.3s ease;
+}
+
+.leaderboard-row:last-child {
+  border-bottom: none;
+}
+
+.leaderboard-row:hover {
+  background-color: #1e1e1e;
+}
+
+/* Rank Number */
+.rank-number {
+  font-family: 'Inter', sans-serif;
+  font-size: 46px;
+  font-weight: 800;
+  color: #b5ff00; /* Thrive Lime */
+  width: 80px;
+}
+
+/* Profile Section */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 2;
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #2a2a2a;
+  color: #b5ff00;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-details h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.profile-details span {
+  font-size: 10px;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Meal Count */
+.meal-stats {
+  flex: 1;
+  font-size: 28px;
+  font-weight: 700;
+  text-align: right;
+  padding-right: 40px;
+}
+
+/* Status Badges */
+.badge-container {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.status-badge {
+  padding: 3px 20px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 4px;
+  background-color: #242424;
+  color: #666;
+  min-width: 100px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+/* Specific Badge Colors if you want to match the subtle variations */
+.top-builder {
+  color: #b5ff00;
+  background-color: rgba(181, 255, 0, 0.05);
+}

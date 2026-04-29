@@ -1,0 +1,446 @@
+:root {
+    --bg-deep: #0a0a0a;
+    --card-grey: #1c1c1c;
+    --lime: #d4ff3f;
+    --text-grey: #a1a1a1;
+}
+
+.landing-wrapper {
+    background-color: var(--bg-deep);
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    padding:20px 80px;
+}
+
+/* The massive background text */
+.bg-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 30vw;
+    font-weight: 900;
+    font-family: 'Sakana';
+    color: #3C3C3C;
+    /* Just slightly lighter than BG */
+    z-index: 0;
+    pointer-events: none;
+    letter-spacing: -2vw;
+}
+
+.navbar {
+    display: flex;
+    justify-content: flex-end;
+    position: relative;
+    z-index: 10;
+}
+
+.logo-text {
+    color: var(--lime);
+    font-weight: 900;
+    font-size: 24px;
+    font-family: 'Sakana';
+}
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    align-items: center;
+    position: relative;
+    z-index: 5;
+    /* margin-top: 20px; */
+}
+
+.hero-left {
+    width: 80%;
+}
+
+.hero-title {
+    font-size: 36px;
+    max-width: 500px;
+    line-height: 1.2;
+    color: #3C3C3C;
+    font-weight: 600;
+    /* Faded state based on image */
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.hero-subtitle {
+    color: var(--text-grey);
+    font-size: 10px;
+    line-height: 1.6;
+    text-align: left;
+}
+
+/* Decorative Plates */
+.food-decor {
+    position: relative;
+    height: 400px;
+    margin-top: 40px;
+}
+
+.plate {
+    position: absolute;
+    border-radius: 50%;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.plate-lg {
+    width: 280px;
+    z-index: 3;
+    top: 80px;
+    left: 0;
+}
+
+.plate-sm {
+    width: 130px;
+    z-index: 4;
+}
+
+.plate-sm.top {
+    top: -40px;
+    left: 260px;
+}
+
+.plate-sm.bottom {
+    width: 160px;
+    top: 320px;
+    left: 300px;
+}
+
+/* Login Card Styling */
+.login-card {
+    background: var(--card-grey);
+    /* border: 1px solid #2a2a2a; */
+    border-radius: 5px;
+    width: 440px;
+    margin-left: auto;
+    margin-top: 100px;
+    overflow: hidden;
+}
+
+.card-padding {
+    padding: 40px;
+}
+
+.input-label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-grey);
+    margin-bottom: 8px;
+    font-weight: bold;
+    text-align: left;
+}
+
+.phone-input {
+    width: 92%;
+    background: #262626;
+    border: none;
+    padding: 16px;
+    border-radius: 5px;
+    color: #fff;
+    margin-bottom: 12px;
+}
+
+.otp-hint {
+    font-size: 11px;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.btn-send {
+    width: 100%;
+    background: var(--lime);
+    border: none;
+    padding: 16px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+/* .btn-create:active{
+
+} */
+
+.btn-create {
+    width: 100%;
+    background: #232a0d;
+    border: none;
+    padding: 16px;
+    border-radius: 5px;
+    font-weight: bold;
+    margin-top: 12px;
+    cursor: pointer;
+    color: #fff;
+}
+
+.divider {
+    text-align: center;
+    margin: 30px 0;
+    /* border-bottom: 1px solid #333; */
+    /* height: 10px; */
+}
+
+.divider span {
+    background: var(--card-grey);
+    padding: 0 10px;
+    font-size: 10px;
+    color: #555;
+}
+
+.social-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.btn-social {
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 10px 0px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Card Stats Footer */
+.card-stats {
+    background: #000;
+    display: flex;
+    justify-content: space-around;
+    padding: 20px;
+    /* border-top: 1px solid #333; */
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item strong {
+    display: block;
+    color: var(--lime);
+    font-size: 18px;
+    line-height: 1;
+}
+
+.stat-item span {
+    color: var(--text-grey);
+    font-size: 11px;
+    line-height: 1;
+}
+
+.otp-wrapper {
+    background-color: #0a0a0a;
+    /* min-height: 80vh; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+     width: 440px;
+}
+
+.otp-card {
+    background: #1c1c1c;
+    width: 100%;
+    margin-top: 70px;
+    max-width: 440px;
+    padding: 40px;
+    border-radius: 5px;
+    text-align: center;
+    z-index: 10;
+}
+
+.otp-title {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 24px;
+}
+
+.otp-subtitle {
+    color: #737373;
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.phone-number {
+    color: var(--lime, #d4ff3f); /* Using your lime variable */
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 40px;
+}
+
+/* OTP Boxes */
+.otp-input-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.otp-box {
+    width: 65px;
+    height: 75px;
+    background: #262626;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--lime, #d4ff3f);
+}
+
+.otp-box.empty::after {
+    content: '';
+    width: 25px;
+    height: 2px;
+    background: #444;
+    display: block;
+}
+
+.expiry-text {
+    color: #737373;
+    font-size: 13px;
+    margin-bottom: 40px;
+}
+
+.resend-text {
+    color: #fff;
+    font-size: 14px;
+    margin-bottom: 40px;
+}
+
+.resend-link {
+    background: none;
+    border: none;
+    color: #737373;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    margin-left: 5px;
+}
+
+.verify-btn {
+    width: 100%;
+    background: var(--lime, #d4ff3f);
+    color: #000;
+    border: none;
+    padding: 16px;
+    border-radius: 5px;
+    font-weight: 900;
+    font-size: 16px;
+    cursor: pointer;
+    transition: filter 0.2s;
+}
+
+.verify-btn:hover {
+    filter: brightness(1.1);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+    .otp-card {
+        margin: 20px;
+        padding: 40px 20px;
+    }
+
+    .otp-box {
+        width: 50px;
+        height: 60px;
+        font-size: 24px;
+    }
+}
+
+/* --- RESPONSIVE STYLES --- */
+
+@media (max-width: 1024px) {
+    .landing-wrapper {
+        padding: 20px 40px;
+        overflow-y: auto; /* Allow scrolling on smaller screens */
+    }
+
+    .hero-content {
+        grid-template-columns: 1fr; /* Stack columns vertically */
+        gap: 40px;
+        text-align: center;
+    }
+
+    .hero-left {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .hero-title {
+        font-size: 28px;
+        text-align: center;
+        max-width: 100%;
+    }
+
+    .hero-subtitle {
+        text-align: center;
+    }
+
+    .login-card {
+        width: 100%; /* Card takes full width */
+        max-width: 440px;
+        margin: 40px auto; /* Center the card */
+    }
+
+    /* Adjust the massive background text so it doesn't cause overflow */
+    .bg-watermark {
+        font-size: 40vw;
+        opacity: 0.5;
+    }
+}
+
+@media (max-width: 768px) {
+    .landing-wrapper {
+        padding: 20px 20px;
+    }
+
+    /* Handle the food plates for mobile */
+    .food-decor {
+        height: 300px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .plate-lg {
+        width: 200px;
+        position: relative; /* Remove absolute positioning to center easily */
+        top: 0;
+        left: 0;
+    }
+
+    /* Hide smaller plates on mobile to reduce clutter, or scale them down */
+    .plate-sm {
+        display: none; 
+    }
+
+    .social-grid {
+        grid-template-columns: 1fr; /* Stack FB and Google buttons */
+    }
+
+    .phone-input {
+        width: 100%; /* Adjust padding box-sizing issues */
+        box-sizing: border-box; 
+    }
+}

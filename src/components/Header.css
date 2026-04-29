@@ -1,0 +1,65 @@
+/* components/Header.css */
+.header {
+  padding: 20px 30px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  color: #b5ff00; /* Lime green */
+  letter-spacing: -1px;
+  font-family: 'Sakana';
+}
+
+.header-nav {
+  display: flex;
+  gap: 30px;
+}
+
+.nav {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nav-links {
+  display: flex;
+  gap: 30px;
+}
+
+.nav-links a {
+  font-size: 14px;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+}
+
+.nav-links a:hover {
+  opacity: 1;
+}
+
+.sign-up-btn {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid #ffffff;
+  padding: 8px 24px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px; /* Optional for rounded corners */
+  cursor: pointer; /* This makes the hand icon appear */
+  position: relative;
+  z-index: 10; /* Ensures it stays on top of background elements */
+}
+
+.sign-up-btn:hover {
+  background-color: #ffffff;
+  color: #121212;
+}
+
+.sign-up-btn:active {
+  transform: scale(0.95); /* Adds a nice "pressed" effect */
+}

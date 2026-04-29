@@ -1,0 +1,162 @@
+.menus-section {
+  padding: 80px 60px;
+  background-color: #121212;
+  text-align: left;
+}
+
+.menus-header {
+  margin-bottom: 30px;
+}
+
+.ready-tag {
+  color: #b5ff00;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.menus-title {
+  font-size: 26px;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.menus-subtitle {
+  max-width: 400px;
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.menus-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.meal-card {
+  background-color: #242424;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.meal-info {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.card-top {
+  padding: 30px 25px;
+  text-align: center;
+  flex-grow: 1;
+}
+
+.meal-info-list {
+  padding: 0 25px 15px 25px;
+}
+
+.meal-tag {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 5px 15px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #b5ff00;
+  border-radius: 2px;
+}
+
+.meal-image-container {
+  margin: 20px 0px 10px 0px;
+}
+
+.meal-img {
+  width: 130px;
+  height: 130px;
+  object-fit: cover; /* This crops the square image into the circle */
+  border-radius: 50%; /* This makes it a perfect circle */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5); /* Adds depth like the screenshot */
+}
+
+.meal-name {
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.meal-desc {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.meal-ingredients {
+  text-align: left;
+  list-style: none;
+  font-size: 12px;
+  color: #ffffff;
+  padding: 0;
+  margin: 0;
+}
+
+.meal-ingredients li {
+  margin-bottom: 5px;
+}
+
+.ingredient-bullet {
+  color: #b5ff00; /* Lime green */
+}
+
+.card-macros {
+  background-color: #000;
+  display: flex;
+  padding: 10px 0;
+  border-bottom: 1px solid #222;
+}
+
+.macro-box {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  color: #666;
+}
+
+.macro-box strong {
+  display: block;
+  color: #b5ff00;
+  font-size: 16px;
+  /* margin-bottom: 2px; */
+}
+
+.card-bottom {
+  padding: 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #1a1a1a;
+}
+
+.price {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.buy-now-btn {
+  background-color: #b5ff00;
+  color: #000;
+  border: none;
+  padding: 10px 25px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.buy-now-btn:hover {
+  background-color: #a0e600;
+}   
+
+.buy-now-btn:active {
+  background-color: #8cd900;
+}
