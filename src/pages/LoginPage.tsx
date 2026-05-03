@@ -29,7 +29,7 @@ const LoginPage: React.FC = () => {
 			// API Call: Using the common service
 			await sendOtp(phoneNumber);
 			setIsSendCodePressed(true);
-		} catch (err) {
+		} catch {
 			alert("Failed to send code. Please ensure the number is correct.");
 		} finally {
 			setLoading(false);
@@ -55,9 +55,9 @@ const LoginPage: React.FC = () => {
 				console.log("Login Successful", res.data);
 				// Save token if your backend sends one
 				if (res.data.token) localStorage.setItem('token', res.data.token);
-				navigate('/order-summary'); // Or wherever your home page is
+				navigate('/order');
 			}
-		} catch (err) {
+		} catch {
 			alert("Invalid OTP. Please try again.");
 		} finally {
 			setLoading(false);

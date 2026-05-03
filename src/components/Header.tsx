@@ -3,13 +3,6 @@ import './Header.css';
 import { Link } from 'react-router-dom';
 
 const Header: React.FC = () => {
-
-  const onClickSignUp = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    // Implement sign-up logic here, e.g., navigate to a sign-up page or open a modal
-
-  }
-
   return (
     <header className="header">
       <div className="header-content">
@@ -26,8 +19,8 @@ const Header: React.FC = () => {
               <li><Link to="/#franchise">Franchise</Link></li>
             </ul>
           </nav>
-          <Link to="/login" className="build-btn-link">
-            <button className="sign-up-btn" onClick={() => { onClickSignUp }}>Sign Up</button>
+          <Link to="/signUp" className="build-btn-link">
+            <button className="sign-up-btn">Sign Up</button>
           </Link>
         </div>
       </div>

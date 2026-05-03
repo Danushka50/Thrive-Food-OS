@@ -8,7 +8,7 @@ interface OtpInputProps {
 
 const OtpInput: React.FC<OtpInputProps> = ({ length = 4, onComplete }) => {
   const [otp, setOtp] = useState<string[]>(new Array(length).fill(""));
-  const inputRefs = useRef<HTMLInputElement[]>([]);
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   // Focus the first input on mount
   useEffect(() => {
@@ -33,14 +33,14 @@ const OtpInput: React.FC<OtpInputProps> = ({ length = 4, onComplete }) => {
 
     // Move to next input if value is entered
     if (value && index < length - 1) {
-      inputRefs.current[index + 1].focus();
+      inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
     // Move to previous input on backspace if current is empty
     if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1].focus();
+      inputRefs.current[index - 1]?.focus();
     }
   };
 
@@ -52,7 +52,9 @@ const OtpInput: React.FC<OtpInputProps> = ({ length = 4, onComplete }) => {
           type="password"
           maxLength={1}
           value={digit}
-          ref={(el) => (inputRefs.current[index] = el!)}
+          ref={(el) => {
+            inputRefs.current[index] = el;
+          }}
           onChange={(e) => handleChange(e.target.value, index)}
           onKeyDown={(e) => handleKeyDown(e, index)}
           className={`otp-box ${digit ? 'active' : 'empty'}`}

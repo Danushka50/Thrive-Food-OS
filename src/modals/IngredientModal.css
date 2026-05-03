@@ -25,9 +25,24 @@
 }
 
 .modal-header h3 { margin: 0; font-size: 18px; }
+.modal-subtitle {
+  margin: 6px 0 0;
+  color: #777;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .close-x { background: none; border: none; color: #555; font-size: 24px; cursor: pointer; }
 
 .modal-body { padding: 25px; }
+
+.ingredient-description {
+  margin: 0 0 20px;
+  color: #9a9a9a;
+  font-size: 13px;
+  line-height: 1.6;
+}
 
 .selection-group { margin-bottom: 25px; }
 .selection-group label {
@@ -39,6 +54,7 @@
 }
 
 .option-grid { display: flex; gap: 10px; }
+.option-grid.wrap { flex-wrap: wrap; }
 .opt-btn {
   background: #222;
   border: 1px solid #333;
@@ -55,24 +71,34 @@
   color: #b5ff00;
 }
 
-.quantity-control {
+.quantity-option {
+  min-width: 110px;
   display: flex;
-  align-items: center;
-  gap: 20px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
 }
 
-.quantity-control button {
-  width: 40px;
-  height: 40px;
-  background: #222;
-  border: none;
+.quantity-option strong {
+  color: inherit;
+  font-size: 14px;
+}
+
+.quantity-option span {
   color: #888;
-  font-size: 20px;
-  cursor: pointer;
+  font-size: 11px;
 }
 
-.gram-val { font-size: 24px; font-weight: 800; margin-right: 8px; }
-.gram-unit { font-size: 12px; color: #444; }
+.quantity-option.active span {
+  color: #d8ff77;
+}
+
+.modal-note {
+  margin: 0;
+  color: #8a8888;
+  font-size: 12px;
+  line-height: 1.5;
+}
 
 .modal-macros-row {
   background: #000;
@@ -83,7 +109,13 @@
 }
 
 .m-unit { flex: 1; text-align: center; }
-.m-unit strong { display: block; color: #b5ff00; font-size: 20px; }
+.m-unit strong {
+  display: block;
+  color: #b5ff00;
+  font-size: 18px;
+  padding: 0 10px;
+  line-height: 1.2;
+}
 .m-unit span { font-size: 10px; color: #444; text-transform: uppercase; }
 
 .modal-footer { padding: 25px; }
@@ -117,4 +149,9 @@
   font-weight: 800;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.add-plate-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
