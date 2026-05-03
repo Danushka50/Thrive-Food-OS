@@ -1,8 +1,30 @@
 import axios, { type AxiosError, type AxiosInstance, type AxiosResponse } from 'axios';
 
-const DEFAULT_API_BASE_URL = 'http://localhost:5000/api';
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/+$/, '');
-export const API_ORIGIN = API_BASE_URL.replace(/\/api$/, '');
+const LOCAL_API_BASE_URL = 'http://localhost:5000/api';
+const DEFAULT_API_BASE_URL = import.meta.env.DEV ? LOCAL_API_BASE_URL : '/api';
+
+const normalizeApiBaseUrl = (value?: string) => {
+  const candidate = value?.trim();
+
+  if (!candidate) {
+    return DEFAULT_API_BASE_URL;
+  }
+
+  const withoutTrailingSlashes = candidate.replace(/\/+$/, '');
+
+  if (!withoutTrailingSlashes) {
+    return DEFAULT_API_BASE_URL;
+  }
+
+  if (withoutTrailingSlashes === '/api' || /\/api$/i.test(withoutTrailingSlashes)) {
+    return withoutTrailingSlashes;
+  }
+
+  return `${withoutTrailingSlashes}/api`;
+};
+
+export const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
+export const API_ORIGIN = API_BASE_URL === '/api' ? '' : API_BASE_URL.replace(/\/api$/, '');
 
 export const resolveApiAssetUrl = (value?: string | null) => {
   if (!value) {
