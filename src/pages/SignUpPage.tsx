@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { isAxiosError } from 'axios';
 import './SignUpPage.css';
 import OtpInput from '../components/OtpInput';
 import { useNavigate } from 'react-router-dom';
@@ -9,10 +10,6 @@ const SignUpPage: React.FC = () => {
 	const navigate = useNavigate();
 	const [step, setStep] = useState(1);
 	const [loading, setLoading] = useState(false);
-
-	const nextStep = () => setStep((prev) => prev + 1);
-
-	const [password, setPassword] = useState("");
 
 	// 1. Centralized Form Data
 	const [formData, setFormData] = useState({
@@ -69,7 +66,7 @@ const SignUpPage: React.FC = () => {
 		try {
 			await sendOtp(formData.phone);
 			setStep(3);
-		} catch (err) {
+		} catch {
 			alert("Failed to send OTP. Please try again.");
 		} finally {
 			setLoading(false);
@@ -82,7 +79,7 @@ const SignUpPage: React.FC = () => {
 		try {
 			await verifyOtp(otp);
 			setStep(4);
-		} catch (err) {
+		} catch {
 			alert("Invalid OTP code. Try 8400 for testing.");
 		} finally {
 			setLoading(false);
@@ -95,24 +92,15 @@ const SignUpPage: React.FC = () => {
 			await registerUser(formData);
 			alert("Account Created Successfully!");
 			navigate('/login');
-		} catch (err: any) {
-			alert(err.response?.data?.message || "Registration failed");
+		} catch (error) {
+			const message = isAxiosError<{ message?: string }>(error)
+				? error.response?.data?.message
+				: undefined;
+			alert(message || "Registration failed");
 		} finally {
 			setLoading(false);
 		}
 	};
-
-
-
-
-
-	// Logic: Check if they match only after the user starts typing in Confirm Password
-
-
-	const [isSendCodePressed, setIsSendCodePressed] = useState<boolean>(false);
-
-
-
 	return (
 		<div className="landing-wrapper">
 			{/* Background Watermark */}

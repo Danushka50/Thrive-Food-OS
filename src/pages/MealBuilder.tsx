@@ -1,297 +1,582 @@
-import React, { use, useEffect, useState } from 'react';
-import IngredientModal from '../modals/IngredientModal';
-import './MealBuilder.css';
-import food_plate from '../assets/food-plate.png';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import IngredientModal from '../modals/IngredientModal';
+import foodPlate from '../assets/food-plate.png';
+import { getFoodOsIngredients, getFoodOsLocations } from '../services/mealBuilderService';
+import type {
+  PlateItem,
+  ThriveIngredient,
+  ThriveIngredientCategory,
+  ThriveIngredientsMeta,
+  ThriveIngredientsResponse,
+  ThriveLocation,
+} from '../types/types';
+import './MealBuilder.css';
 
-interface PlateItem {
-	id: string;
-	name: string;
-	cut: string;
-	grams: number;
-	cookStyle: string;
-	macros: { protein: string; carbs: string; fats: string; kcal: string };
-	price: string;
-	image: string;
-}
+const LOCATION_STORAGE_KEY = 'thrive-food-os:selected-location';
+const MAX_PLATE_ITEMS = 3;
+
+const toDisplayText = (value: string) =>
+  value
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+const formatPrice = (amount: number, currency = 'LKR') =>
+  `${currency} ${new Intl.NumberFormat('en-LK', { maximumFractionDigits: 0 }).format(amount)}`;
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof error.response === 'object' &&
+    error.response !== null &&
+    'data' in error.response &&
+    typeof error.response.data === 'object' &&
+    error.response.data !== null
+  ) {
+    const data = error.response.data as { error?: string; message?: string };
+    return data.error || data.message || fallback;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+};
 
 const MealBuilder: React.FC = () => {
-	const [isModalOpen, setModalOpen] = useState(false);
-	const [activeIngredient, setActiveIngredient] = useState<string | null>(null);
-	const [selectedCategory, setSelectedCategory] = useState('Meat');
-	const [plateItems, setPlateItems] = useState<PlateItem[]>([]);
-	const [selectedDelivery, setSelectedDelivery] = useState('now');
+  const catalogCacheRef = useRef<Record<string, ThriveIngredientsResponse>>({});
+  const [locations, setLocations] = useState<ThriveLocation[]>([]);
+  const [selectedLocationId, setSelectedLocationId] = useState('');
+  const [catalog, setCatalog] = useState<ThriveIngredientCategory[]>([]);
+  const [catalogMeta, setCatalogMeta] = useState<ThriveIngredientsMeta | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [plateItems, setPlateItems] = useState<PlateItem[]>([]);
+  const [selectedDelivery, setSelectedDelivery] = useState('now');
+  const [activeIngredient, setActiveIngredient] = useState<ThriveIngredient | null>(null);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(true);
+  const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
-	const categories = ['Meat', 'Seafood', 'Vegetables', 'Carbs', 'Dairy', 'Eggs', 'Extras'];
+  useEffect(() => {
+    let isMounted = true;
 
-	useEffect(() => {
-		let x = 5
-		let y = 3
-		x = y
-		x + 5
+    const getCatalogForLocation = async (locationId: string) => {
+      if (catalogCacheRef.current[locationId]) {
+        return catalogCacheRef.current[locationId];
+      }
 
-		console.log(x);
-	}, []);
+      const response = await getFoodOsIngredients(locationId);
+      catalogCacheRef.current[locationId] = response;
+      return response;
+    };
 
-	const ingredientsByCategory: { [key: string]: string[] } = {
-		Meat: ['Chicken', 'Beef', 'Mutton'],
-		Seafood: ['Salmon', 'Tuna', 'Shrimp'],
-		Vegetables: ['Broccoli', 'Spinach', 'Carrots'],
-		Carbs: ['Rice', 'Quinoa', 'Pasta'],
-		Dairy: ['Cheese', 'Milk', 'Yogurt'],
-		Eggs: ['Eggs'],
-		Extras: ['Nuts', 'Seeds', 'Oils']
-	};
+    const loadLocations = async () => {
+      setIsLoadingLocations(true);
+      setLoadError('');
 
-	// Handle drag start
-	const handleDragStart = (e: React.DragEvent, ingredient: string) => {
-		e.dataTransfer.effectAllowed = 'move';
-		e.dataTransfer.setData('ingredient', ingredient);
-	};
+      try {
+        const locationData = await getFoodOsLocations();
+        if (!isMounted) {
+          return;
+        }
 
-	// Handle drag over plate
-	const handleDragOver = (e: React.DragEvent) => {
-		e.preventDefault();
-		e.dataTransfer.dropEffect = 'move';
-	};
+        setLocations(locationData);
 
-	// Handle drop on plate
-	const handleDropOnPlate = (e: React.DragEvent) => {
-		e.preventDefault();
-		const ingredient = e.dataTransfer.getData('ingredient');
-		setActiveIngredient(ingredient);
-		setModalOpen(true);
-	};
+        if (!locationData.length) {
+          setSelectedLocationId('');
+          return;
+        }
 
-	// Function to add item to plate
-	const handleAddToPlate = (item: PlateItem) => {
-		setPlateItems(prev => [...prev, item]);
-	};
+        const storedLocationId = window.localStorage.getItem(LOCATION_STORAGE_KEY);
+        if (storedLocationId && locationData.some((location) => location.id === storedLocationId)) {
+          setSelectedLocationId(storedLocationId);
+          return;
+        }
 
-	// Function to remove item from plate
-	const handleRemoveItem = (id: string) => {
-		setPlateItems(prev => prev.filter(item => item.id !== id));
-	};
+        let preferredLocationId = locationData[0].id;
+        for (const location of locationData) {
+          const response = await getCatalogForLocation(location.id);
+          if (!isMounted) {
+            return;
+          }
 
-	return (
-		<div>
-			<div className="builder-page">
-				{/* --- LEFT SIDEBAR: INGREDIENTS --- */}
-				<aside className="ingredients-sidebar">
-					<h5 className="sidebar-title">INGREDIENTS</h5>
-					<div className="category-grid">
-						{categories.map(cat => (
-							<button
-								key={cat}
-								className={`cat-btn ${selectedCategory === cat ? 'active' : ''}`}
-								onClick={() => setSelectedCategory(cat)}
-							>
-								{cat}
-							</button>
-						))}
-					</div>
+          if ((response.meta.total_ingredients || 0) > 0) {
+            preferredLocationId = location.id;
+            break;
+          }
+        }
 
-					<div className="ingredient-list">
-						{(ingredientsByCategory[selectedCategory] || []).map(item => (
-							<div
-								key={item}
-								className="ingredient-card"
-								draggable
-								onDragStart={(e) => handleDragStart(e, item)}
-							>
-								<div className="ing-info">
-									<span className="ing-name">{item}</span>
-									<span className="ing-cal">165 Kcal/100g</span>
-								</div>
-								<button
-									className="drag-btn"
-									onClick={(e) => {
-										e.stopPropagation();
-									}}
-								>
-									Drag
-								</button>
-							</div>
-						))}
-					</div>
-				</aside>
+        setSelectedLocationId(preferredLocationId);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
 
-				{/* --- CENTER: THE PLATE --- */}
-				<main className="plate-container">
-					<p className="instruction-text">DRAG INGREDIENTS TO YOUR PLATE</p>
-					<div className="arrow-down">↓</div>
+        setLoadError(getErrorMessage(error, 'Unable to load locations from Thrive_Backend.'));
+        setLocations([]);
+      } finally {
+        if (isMounted) {
+          setIsLoadingLocations(false);
+        }
+      }
+    };
 
-					<div
-						className="main-plate-view"
-						onDragOver={handleDragOver}
-						onDrop={handleDropOnPlate}
-					>
-						<div className="plate-circle">
-							{/* The brand watermark from your design */}
-							<div className="plate-logo">THRIVE</div>
-							{plateItems.map((item, index) => {
-								const angle = index * 40;
-								const radius = 40;
-								const radian = (angle * Math.PI) / 180;
-								const top = 50 + radius * Math.sin(radian);
-								const left = 50 + radius * Math.cos(radian);
-								const size = 150;
+    void loadLocations();
 
-								return (
-									<img
-										key={item.id}
-										src={item.image}
-										alt={item.name}
-										className="placed-food"
-										style={{
-											position: 'absolute',
-											top: `${top}%`,
-											left: `${left}%`,
-											width: `${size}px`,
-											height: `${size}px`,
-											transform: `translate(-50%, -50%)`,
-											objectFit: 'contain',
-											zIndex: index + 1
-										}}
-									/>
-								);
-							})}
-						</div>
-						<p className="build-step">Build your meal ({plateItems.length}/3)</p>
-					</div>
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-					{/* Live Macro Tracker */}
-					<div className="live-macros">
-						<div className="m-stat"><strong>{plateItems.reduce((sum, item) => sum + parseInt(item.macros.protein), 0)}g</strong><span>Protein</span></div>
-						<div className="m-stat"><strong>{plateItems.reduce((sum, item) => sum + parseInt(item.macros.carbs), 0)}g</strong><span>Carbs</span></div>
-						<div className="m-stat"><strong>{plateItems.reduce((sum, item) => sum + parseInt(item.macros.fats), 0)}g</strong><span>Fats</span></div>
-						<div className="m-stat"><strong>{plateItems.reduce((sum, item) => sum + parseInt(item.macros.kcal), 0)}</strong><span>Kcal</span></div>
-					</div>
+  useEffect(() => {
+    if (!selectedLocationId) {
+      setCatalog([]);
+      setCatalogMeta(null);
+      setSelectedCategoryId('');
+      return;
+    }
 
-					<div className="suggested-section">
-						<p className="suggested-label">SUGGESTED DISHES BASED ON YOUR PLATE</p>
-						<div className="suggestion-card">
-							<div className="card-badge">MUSCLE GAIN</div>
+    let isMounted = true;
 
-							<div className="card-main-content">
-								<img
-									src={food_plate}
-									alt="Chicken Dish"
-									className="suggestion-img"
-								/>
-								<div className="suggestion-text">
-									<h4>Chicken with Thai Mango-Coconut Dip</h4>
-									<p className="description">
-										Chicken Breast, Zucchini, Onion, Tomatoes, Kale, Mango, Herbs & spices, EVOO, Coconut Cream, Garlic, Salt, Brown Sugar
-									</p>
+    const loadIngredients = async () => {
+      setIsLoadingIngredients(true);
+      setLoadError('');
 
-								</div>
-							</div>
+      try {
+        const response =
+          catalogCacheRef.current[selectedLocationId] || (await getFoodOsIngredients(selectedLocationId));
 
-							<ul className="ingredient-bullets">
-								<li><span></span> Chicken Thigh 250g</li>
-								<li><span></span> Brown Rice 200g</li>
-								<li><span></span> Broccoli 150g</li>
-								<li><span></span> Boiled Egg x2</li>
-							</ul>
+        catalogCacheRef.current[selectedLocationId] = response;
 
-							<div className="suggestion-macros-row">
-								<div className="s-macro"><strong>40g</strong><span>Protein</span></div>
-								<div className="s-macro"><strong>35g</strong><span>Carbs</span></div>
-								<div className="s-macro"><strong>15g</strong><span>Fats</span></div>
-								<div className="s-macro"><strong>450</strong><span>Kcal</span></div>
-							</div>
+        if (!isMounted) {
+          return;
+        }
 
-							<div className="suggestion-footer">
-								<span className="suggestion-price">1,850 LKR</span>
-								<Link to="/order">
-									<button className="buy-now-btn">Buy Now</button>
-								</Link>
-							</div>
-						</div>
-					</div>
-				</main>
+        setCatalog(response.data);
+        setCatalogMeta(response.meta);
+        setSelectedCategoryId((currentCategoryId) => {
+          const currentCategoryExists = response.data.some(
+            (category) => category.category_id === currentCategoryId,
+          );
 
-				{/* --- RIGHT SIDEBAR: ORDER SUMMARY --- */}
-				<aside className="order-summary">
-					<div className="summary-header">
-						<span className="plate-title">Your Plate</span>
-						<span className="item-count">{plateItems.length} Item{plateItems.length !== 1 ? 's' : ''}</span>
-					</div>
+          if (currentCategoryExists) {
+            return currentCategoryId;
+          }
 
-					<div className="selected-items-list">
-						{plateItems.map(item => (
-							<div key={item.id} className="selected-item">
-								{/* <img src={item.image} alt={item.name} className="selected-item-thumb"/> */}
-								<div className="item-main">
-									<strong>{item.name}</strong>
-									<span>{item.macros.kcal}/{item.grams}g</span>
-								</div>
-								<div className="item-tags">
-									<span className="tag-accent">{item.cut}</span>
-									<span className="tag-accent">{item.cookStyle}</span>
-									<button className="remove-item" onClick={() => handleRemoveItem(item.id)}>×</button>
-								</div>
-							</div>
-						))}
-					</div>
+          const firstCategoryWithIngredients = response.data.find(
+            (category) => category.ingredients.length > 0,
+          );
 
-					<div className="total-box">
-						<span className="total-label">TOTAL</span>
-						<span className="total-price">LKR {plateItems.reduce((sum, item) => sum + parseInt(item.price.split(' ')[1]), 0)}</span>
-					</div>
+          return firstCategoryWithIngredients?.category_id || response.data[0]?.category_id || '';
+        });
+        setActiveIngredient(null);
+        setModalOpen(false);
+        window.localStorage.setItem(LOCATION_STORAGE_KEY, selectedLocationId);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
 
-					<div className="name-meal-input">
-						<p>Every meal you build gets a name and a place in our community.</p>
-						<input type="text" placeholder="Name your meal" />
-					</div>
+        setCatalog([]);
+        setCatalogMeta(null);
+        setLoadError(getErrorMessage(error, 'Unable to load location-wise ingredients.'));
+      } finally {
+        if (isMounted) {
+          setIsLoadingIngredients(false);
+        }
+      }
+    };
 
-					<div className="delivery-options">
-						<p>Your meal can be delivered at your convenience.</p>
-						<div className="delivery-buttons">
-							<button
-								className={`delivery-btn order-now-btn ${selectedDelivery === 'now' ? 'active' : ''}`}
-								onClick={() => setSelectedDelivery('now')}
-							>
-								<div className="opt-text">
-									<strong>Order Now</strong>
-									<span>Delivered in 45 Min</span>
-								</div>
-								{selectedDelivery === 'now' && <div className="check-circle">✓</div>}
-							</button>
+    void loadIngredients();
 
-							<button
-								className={`delivery-btn ${selectedDelivery === 'schedule' ? 'active' : ''}`}
-								onClick={() => setSelectedDelivery('schedule')}
-							>
-								<div className="opt-text">
-									<strong>Schedule</strong>
-									<span>Pick a time</span>
-								</div>
-								{selectedDelivery === 'schedule' && <div className="check-circle">✓</div>}
-							</button>
-						</div>
-					</div>
-					<button
-						className="add-more-btn"
-						disabled={plateItems.length < 3}
-					>
-						{plateItems.length >= 3
-							? 'Complete - Proceed to Checkout'
-							: `Add ${Math.max(0, 3 - plateItems.length)} More item${plateItems.length >= 2 ? '' : 's'} to Order`}
-					</button>
-				</aside>
-			</div>
-			{/* --- POPUP MODAL --- */}
-			{isModalOpen && (
-				<IngredientModal
-					name={activeIngredient || ''}
-					onClose={() => setModalOpen(false)}
-					onAddToPlate={handleAddToPlate}
-				/>
-			)}
-		</div>
-	);
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedLocationId]);
+
+  const currentLocation =
+    locations.find((location) => location.id === selectedLocationId) || catalogMeta?.location || null;
+  const selectedCategory =
+    catalog.find((category) => category.category_id === selectedCategoryId) || catalog[0] || null;
+  const categoryIngredients = selectedCategory?.ingredients || [];
+  const totalPrice = plateItems.reduce((sum, item) => sum + item.price, 0);
+  const totalWeight = plateItems.reduce((sum, item) => sum + item.grams, 0);
+  const plateCurrency = currentLocation?.currency || plateItems[0]?.currency || 'LKR';
+
+  const findIngredientById = (ingredientId: string) => {
+    for (const category of catalog) {
+      const matchedIngredient = category.ingredients.find((ingredient) => ingredient.id === ingredientId);
+      if (matchedIngredient) {
+        return matchedIngredient;
+      }
+    }
+
+    return null;
+  };
+
+  const openIngredientModal = (ingredient: ThriveIngredient) => {
+    if (plateItems.length >= MAX_PLATE_ITEMS) {
+      return;
+    }
+
+    setActiveIngredient(ingredient);
+    setModalOpen(true);
+  };
+
+  const handleDragStart = (event: React.DragEvent, ingredient: ThriveIngredient) => {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('ingredientId', ingredient.id);
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = plateItems.length >= MAX_PLATE_ITEMS ? 'none' : 'move';
+  };
+
+  const handleDropOnPlate = (event: React.DragEvent) => {
+    event.preventDefault();
+    if (plateItems.length >= MAX_PLATE_ITEMS) {
+      return;
+    }
+
+    const ingredientId = event.dataTransfer.getData('ingredientId');
+    const ingredient = findIngredientById(ingredientId);
+
+    if (ingredient) {
+      openIngredientModal(ingredient);
+    }
+  };
+
+  const handleAddToPlate = (item: PlateItem) => {
+    setPlateItems((previousItems) => {
+      if (previousItems.length >= MAX_PLATE_ITEMS) {
+        return previousItems;
+      }
+
+      return [...previousItems, item];
+    });
+  };
+
+  const handleRemoveItem = (id: string) => {
+    setPlateItems((previousItems) => previousItems.filter((item) => item.id !== id));
+  };
+
+  const instructionText = isLoadingIngredients
+    ? 'LOADING INGREDIENTS FROM THRIVE_BACKEND'
+    : plateItems.length >= MAX_PLATE_ITEMS
+      ? 'PLATE READY. REMOVE AN ITEM TO CHANGE IT'
+      : 'DRAG INGREDIENTS TO YOUR PLATE';
+
+  return (
+    <div>
+      <div className="builder-page">
+        <aside className="ingredients-sidebar">
+          <div className="location-panel">
+            <span className="location-label">LOCATION</span>
+            <select
+              className="location-select"
+              value={selectedLocationId}
+              onChange={(event) => setSelectedLocationId(event.target.value)}
+              disabled={isLoadingLocations || !locations.length}
+            >
+              {locations.length ? null : <option value="">No locations found</option>}
+              {locations.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name}
+                </option>
+              ))}
+            </select>
+            <div className="location-meta">
+              <span>{currentLocation?.location_type || 'Kitchen'}</span>
+              <span>{catalogMeta?.total_ingredients ?? 0} live ingredients</span>
+            </div>
+          </div>
+
+          <h5 className="sidebar-title">INGREDIENTS</h5>
+          <div className="category-grid">
+            {catalog.map((category) => (
+              <button
+                key={category.category_id || category.category_name}
+                className={`cat-btn ${selectedCategory?.category_id === category.category_id ? 'active' : ''}`}
+                onClick={() => setSelectedCategoryId(category.category_id || '')}
+              >
+                <span>{toDisplayText(category.category_name)}</span>
+                <small>{category.ingredient_count}</small>
+              </button>
+            ))}
+          </div>
+
+          {loadError ? <div className="builder-feedback error">{loadError}</div> : null}
+
+          <div className="ingredient-list">
+            {isLoadingIngredients ? (
+              <div className="ingredient-empty-state">Loading location-wise ingredient catalog...</div>
+            ) : categoryIngredients.length ? (
+              categoryIngredients.map((ingredient) => {
+                const defaultQuantity = ingredient.default_quantity || ingredient.quantities[0] || null;
+
+                return (
+                  <div
+                    key={ingredient.id}
+                    className="ingredient-card"
+                    draggable={plateItems.length < MAX_PLATE_ITEMS}
+                    onDragStart={(event) => handleDragStart(event, ingredient)}
+                    onClick={() => openIngredientModal(ingredient)}
+                  >
+                    <div className="ing-info">
+                      <span className="ing-name">{ingredient.name}</span>
+                      <span className="ing-cal">
+                        {defaultQuantity
+                          ? `${defaultQuantity.quantity_value} • ${formatPrice(
+                              defaultQuantity.price,
+                              defaultQuantity.currency,
+                            )}`
+                          : 'Quantity setup pending'}
+                      </span>
+                    </div>
+                    <button
+                      className="drag-btn"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openIngredientModal(ingredient);
+                      }}
+                    >
+                      Drag
+                    </button>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="ingredient-empty-state">
+                {selectedCategory
+                  ? `No ingredients are available in ${currentLocation?.name || 'this location'} for ${toDisplayText(
+                      selectedCategory.category_name,
+                    )}.`
+                  : 'Choose a location to load the ingredient catalog.'}
+              </div>
+            )}
+          </div>
+        </aside>
+
+        <main className="plate-container">
+          <p className="instruction-text">{instructionText}</p>
+          <div className="arrow-down">{!isLoadingIngredients && categoryIngredients.length ? '\u2193' : ''}</div>
+
+          <div className="main-plate-view" onDragOver={handleDragOver} onDrop={handleDropOnPlate}>
+            <div className="plate-circle">
+              <div className="plate-logo">THRIVE</div>
+              {plateItems.map((item, index) => {
+                const angle = index * 40;
+                const radius = 40;
+                const radians = (angle * Math.PI) / 180;
+                const top = 50 + radius * Math.sin(radians);
+                const left = 50 + radius * Math.cos(radians);
+                const positionStyle = {
+                  position: 'absolute' as const,
+                  top: `${top}%`,
+                  left: `${left}%`,
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: index + 1,
+                };
+
+                if (item.image) {
+                  return (
+                    <img
+                      key={item.id}
+                      src={item.image}
+                      alt={item.name}
+                      className="placed-food"
+                      style={{
+                        ...positionStyle,
+                        width: '150px',
+                        height: '150px',
+                        objectFit: 'contain',
+                      }}
+                    />
+                  );
+                }
+
+                return (
+                  <div key={item.id} className="placed-food-fallback" style={positionStyle}>
+                    {item.name}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="build-step">
+              Build your meal ({plateItems.length}/{MAX_PLATE_ITEMS})
+            </p>
+          </div>
+
+          <div className="live-macros">
+            <div className="m-stat">
+              <strong>{totalWeight}g</strong>
+              <span>Weight</span>
+            </div>
+            <div className="m-stat">
+              <strong>{plateItems.length}</strong>
+              <span>Items</span>
+            </div>
+            <div className="m-stat">
+              <strong>{selectedCategory?.ingredient_count ?? 0}</strong>
+              <span>Available</span>
+            </div>
+            <div className="m-stat">
+              <strong>{formatPrice(totalPrice, plateCurrency)}</strong>
+              <span>Total</span>
+            </div>
+          </div>
+
+          <div className="suggested-section">
+            <p className="suggested-label">SUGGESTED DISHES BASED ON YOUR PLATE</p>
+            <div className="suggestion-card">
+              <div className="card-badge">{currentLocation?.name || 'LIVE CATALOG'}</div>
+
+              <div className="card-main-content">
+                <img src={foodPlate} alt="Featured dish" className="suggestion-img" />
+                <div className="suggestion-text">
+                  <h4>{selectedCategory ? `${toDisplayText(selectedCategory.category_name)} spotlight` : 'Choose a location'}</h4>
+                  <p className="description">
+                    {categoryIngredients.length
+                      ? `Live Thrive_Backend ingredients available for ${currentLocation?.name || 'this kitchen'}: ${categoryIngredients
+                          .slice(0, 4)
+                          .map((ingredient) => ingredient.name)
+                          .join(', ')}.`
+                      : 'Select a location with available ingredients to start building your plate.'}
+                  </p>
+                </div>
+              </div>
+
+              <ul className="ingredient-bullets">
+                {categoryIngredients.slice(0, 4).map((ingredient) => (
+                  <li key={ingredient.id}>
+                    <span></span>
+                    {ingredient.name} {ingredient.default_quantity?.quantity_value || ''}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="suggestion-macros-row">
+                <div className="s-macro">
+                  <strong>{catalogMeta?.total_categories ?? 0}</strong>
+                  <span>Categories</span>
+                </div>
+                <div className="s-macro">
+                  <strong>{catalogMeta?.total_ingredients ?? 0}</strong>
+                  <span>Ingredients</span>
+                </div>
+                <div className="s-macro">
+                  <strong>{currentLocation?.location_type || 'Kitchen'}</strong>
+                  <span>Location</span>
+                </div>
+                <div className="s-macro">
+                  <strong>{plateItems.length}/{MAX_PLATE_ITEMS}</strong>
+                  <span>On Plate</span>
+                </div>
+              </div>
+
+              <div className="suggestion-footer">
+                <span className="suggestion-price">{formatPrice(totalPrice, plateCurrency)}</span>
+                <Link to="/order">
+                  <button className="buy-now-btn">Buy Now</button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <aside className="order-summary">
+          <div className="summary-header">
+            <span className="plate-title">Your Plate</span>
+            <span className="item-count">
+              {plateItems.length} Item{plateItems.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+
+          <div className="selected-items-list">
+            {plateItems.length ? (
+              plateItems.map((item) => (
+                <div key={item.id} className="selected-item">
+                  <div className="item-main">
+                    <strong>{item.name}</strong>
+                    <span>{item.grams ? `${item.quantity_label} / ${item.grams}g` : item.quantity_label}</span>
+                  </div>
+                  <div className="item-tags">
+                    <span className="tag-accent">{item.specification || item.quantity_label}</span>
+                    <span className="tag-accent">{item.cook_style}</span>
+                    <button className="remove-item" onClick={() => handleRemoveItem(item.id)}>
+                      &times;
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="selected-items-empty">Drag ingredients here to start building your meal.</div>
+            )}
+          </div>
+
+          <div className="total-box">
+            <span className="total-label">TOTAL</span>
+            <span className="total-price">{formatPrice(totalPrice, plateCurrency)}</span>
+          </div>
+
+          <div className="name-meal-input">
+            <p>Every meal you build gets a name and a place in our community.</p>
+            <input type="text" placeholder="Name your meal" />
+          </div>
+
+          <div className="delivery-options">
+            <p>Your meal can be delivered at your convenience.</p>
+            <div className="delivery-buttons">
+              <button
+                className={`delivery-btn order-now-btn ${selectedDelivery === 'now' ? 'active' : ''}`}
+                onClick={() => setSelectedDelivery('now')}
+              >
+                <div className="opt-text">
+                  <strong>Order Now</strong>
+                  <span>Delivered in 45 Min</span>
+                </div>
+                {selectedDelivery === 'now' && <div className="check-circle">&#10003;</div>}
+              </button>
+
+              <button
+                className={`delivery-btn ${selectedDelivery === 'schedule' ? 'active' : ''}`}
+                onClick={() => setSelectedDelivery('schedule')}
+              >
+                <div className="opt-text">
+                  <strong>Schedule</strong>
+                  <span>Pick a time</span>
+                </div>
+                {selectedDelivery === 'schedule' && <div className="check-circle">&#10003;</div>}
+              </button>
+            </div>
+          </div>
+
+          <button className="add-more-btn" disabled={plateItems.length < MAX_PLATE_ITEMS}>
+            {plateItems.length >= MAX_PLATE_ITEMS
+              ? 'Complete - Proceed to Checkout'
+              : `Add ${Math.max(0, MAX_PLATE_ITEMS - plateItems.length)} More item${
+                  plateItems.length >= MAX_PLATE_ITEMS - 1 ? '' : 's'
+                } to Order`}
+          </button>
+        </aside>
+      </div>
+
+      {isModalOpen && activeIngredient ? (
+        <IngredientModal
+          ingredient={activeIngredient}
+          onClose={() => setModalOpen(false)}
+          onAddToPlate={handleAddToPlate}
+        />
+      ) : null}
+    </div>
+  );
 };
 
 export default MealBuilder;
