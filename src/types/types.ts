@@ -119,6 +119,13 @@ export interface ThriveIngredientsResponse {
   data: ThriveIngredientCategory[];
 }
 
+export interface PlateItemMacros {
+  protein: number;
+  carbs: number;
+  fats: number;
+  kcal: number;
+}
+
 export interface PlateItem {
   id: string;
   ingredient_id: string;
@@ -130,4 +137,5 @@ export interface PlateItem {
   price: number;
   currency: string;
   image: string | null;
+  macros: PlateItemMacros;
 }
