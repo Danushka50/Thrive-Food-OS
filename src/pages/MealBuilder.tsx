@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import IngredientModal from '../modals/IngredientModal';
 import foodPlate from '../assets/food-plate.png';
 import { getFoodOsIngredients, getFoodOsLocations } from '../services/mealBuilderService';
+import { createEmptyMacros } from '../utils/nutrition';
 import type {
   PlateItem,
   ThriveIngredient,
@@ -25,6 +26,16 @@ const toDisplayText = (value: string) =>
 
 const formatPrice = (amount: number, currency = 'LKR') =>
   `${currency} ${new Intl.NumberFormat('en-LK', { maximumFractionDigits: 0 }).format(amount)}`;
+
+const formatMacroValue = (value: number) => {
+  const roundedValue = Math.round(value * 10) / 10;
+
+  if (roundedValue === 0) {
+    return '0';
+  }
+
+  return Number.isInteger(roundedValue) ? `${roundedValue}` : roundedValue.toFixed(1);
+};
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (
@@ -206,8 +217,14 @@ const MealBuilder: React.FC = () => {
     catalog.find((category) => category.category_id === selectedCategoryId) || catalog[0] || null;
   const categoryIngredients = selectedCategory?.ingredients || [];
   const totalPrice = plateItems.reduce((sum, item) => sum + item.price, 0);
-  const totalWeight = plateItems.reduce((sum, item) => sum + item.grams, 0);
   const plateCurrency = currentLocation?.currency || plateItems[0]?.currency || 'LKR';
+  const totalMacros = plateItems.reduce((totals, item) => {
+    totals.protein += item.macros.protein || 0;
+    totals.carbs += item.macros.carbs || 0;
+    totals.fats += item.macros.fats || 0;
+    totals.kcal += item.macros.kcal || 0;
+    return totals;
+  }, createEmptyMacros());
 
   const findIngredientById = (ingredientId: string) => {
     for (const category of catalog) {
@@ -366,7 +383,6 @@ const MealBuilder: React.FC = () => {
 
         <main className="plate-container">
           <p className="instruction-text">{instructionText}</p>
-          <div className="arrow-down">{!isLoadingIngredients && categoryIngredients.length ? '\u2193' : ''}</div>
 
           <div className="main-plate-view" onDragOver={handleDragOver} onDrop={handleDropOnPlate}>
             <div className="plate-circle">
@@ -416,20 +432,20 @@ const MealBuilder: React.FC = () => {
 
           <div className="live-macros">
             <div className="m-stat">
-              <strong>{totalWeight}g</strong>
-              <span>Weight</span>
+              <strong>{formatMacroValue(totalMacros.protein)}g</strong>
+              <span>Protein</span>
             </div>
             <div className="m-stat">
-              <strong>{plateItems.length}</strong>
-              <span>Items</span>
+              <strong>{formatMacroValue(totalMacros.carbs)}g</strong>
+              <span>Carbs</span>
             </div>
             <div className="m-stat">
-              <strong>{selectedCategory?.ingredient_count ?? 0}</strong>
-              <span>Available</span>
+              <strong>{formatMacroValue(totalMacros.fats)}g</strong>
+              <span>Fats</span>
             </div>
             <div className="m-stat">
-              <strong>{formatPrice(totalPrice, plateCurrency)}</strong>
-              <span>Total</span>
+              <strong>{formatMacroValue(totalMacros.kcal)}</strong>
+              <span>Kcal</span>
             </div>
           </div>
 
@@ -570,6 +586,7 @@ const MealBuilder: React.FC = () => {
 
       {isModalOpen && activeIngredient ? (
         <IngredientModal
+          key={activeIngredient.id}
           ingredient={activeIngredient}
           onClose={() => setModalOpen(false)}
           onAddToPlate={handleAddToPlate}

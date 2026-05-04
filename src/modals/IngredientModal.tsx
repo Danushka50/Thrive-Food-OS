@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import type { PlateItem, ThriveIngredient } from '../types/types';
+import { getPlateItemMacros } from '../utils/nutrition';
 import './IngredientModal.css';
 
 interface ModalProps {
@@ -21,12 +22,6 @@ const IngredientModal: React.FC<ModalProps> = ({ ingredient, onClose, onAddToPla
   const [selectedQuantityId, setSelectedQuantityId] = useState(defaultQuantityId);
   const [selectedSpecificationId, setSelectedSpecificationId] = useState(defaultSpecificationId);
   const [selectedCookTypeId, setSelectedCookTypeId] = useState(defaultCookTypeId);
-
-  useEffect(() => {
-    setSelectedQuantityId(defaultQuantityId);
-    setSelectedSpecificationId(defaultSpecificationId);
-    setSelectedCookTypeId(defaultCookTypeId);
-  }, [defaultCookTypeId, defaultQuantityId, defaultSpecificationId, ingredient.id]);
 
   const selectedQuantity =
     quantityOptions.find((quantity) => quantity.id === selectedQuantityId) || quantityOptions[0] || null;
@@ -55,6 +50,7 @@ const IngredientModal: React.FC<ModalProps> = ({ ingredient, onClose, onAddToPla
       price: selectedQuantity.price,
       currency: selectedQuantity.currency,
       image: ingredient.photo_url || null,
+      macros: getPlateItemMacros(ingredient, selectedQuantity),
     };
 
     onAddToPlate(newItem);
