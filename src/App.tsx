@@ -17,9 +17,9 @@ import MainLayout from './Layout/MainLayout';
 import SignUpPage from './pages/SignUpPage';
 import PrivacyPolicy from './pages/support/PrivacyPolicy';
 import HelpCenter from './pages/support/HelpCenter';
-import { Contact } from 'lucide-react';
 import About from './pages/company/About';
 import Careers from './pages/company/Careers';
+import Contact from './pages/company/Contact';
 import DigitalKitchen from './pages/product/DigitalKitchen';
 import HowItWorks from './pages/product/HowItWorks';
 import Scheduling from './pages/product/Scheduling';
@@ -27,6 +27,8 @@ import PricingMeals from './pages/product/PricingMeals';
 import PressMedia from './pages/company/PressMedia';
 import FAQs from './pages/support/FAQs';
 import TermsConditions from './pages/support/TermsConditions';
+import ChefLoginPage from './pages/ChefLoginPage';
+import ChefOrdersPage from './pages/ChefOrdersPage';
 
 const LandingPage = () => (
   <>
@@ -73,6 +75,8 @@ const App: React.FC = () => {
         {/* --- ROUTES WITHOUT HEADER/FOOTER --- */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signUp" element={<SignUpPage />} />
+        <Route path="/chef/login" element={<ChefLoginPage />} />
+        <Route path="/chef/orders" element={<ChefOrdersPage />} />
       </Routes>
     </Router>
   );
