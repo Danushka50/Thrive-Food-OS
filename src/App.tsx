@@ -29,6 +29,9 @@ import FAQs from './pages/support/FAQs';
 import TermsConditions from './pages/support/TermsConditions';
 import ChefLoginPage from './pages/ChefLoginPage';
 import ChefOrdersPage from './pages/ChefOrdersPage';
+import Community from "./pages/Community";
+import Menu from "./pages/Menu";
+import PowerDrinksPage from "./pages/PowerDrinks";
 
 const LandingPage = () => (
   <>
@@ -53,24 +56,27 @@ const App: React.FC = () => {
           <Route path="/" element={<LandingPage />} />
           <Route path="/build" element={<MealBuilder />} />
           <Route path="/order" element={<OrderPage />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/menu" element={<Menu />} />
+          <Route path="/powerDrinks" element={<PowerDrinksPage />} />
 
           {/* Product Routes */}
-        <Route path="/digital-kitchen" element={<DigitalKitchen />} />
-        <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/pricingMeals" element={<PricingMeals />} />
-        <Route path="/scheduling" element={<Scheduling />} />
+          <Route path="/digital-kitchen" element={<DigitalKitchen />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/pricingMeals" element={<PricingMeals />} />
+          <Route path="/scheduling" element={<Scheduling />} />
 
-        {/* Company Routes */}
-        <Route path="/about" element={<About />} />
-        <Route path="/careers" element={<Careers />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/pressMedia" element={<PressMedia />} />
-        
-        {/* Support Routes */}
-        <Route path="/help" element={<HelpCenter />} />
-        <Route path="/privacyPolicy" element={<PrivacyPolicy />} />
-        <Route path="/faqs" element={<FAQs />} />
-        <Route path="/termsConditions" element={<TermsConditions />} />
+          {/* Company Routes */}
+          <Route path="/about" element={<About />} />
+          <Route path="/careers" element={<Careers />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/pressMedia" element={<PressMedia />} />
+
+          {/* Support Routes */}
+          <Route path="/help" element={<HelpCenter />} />
+          <Route path="/privacyPolicy" element={<PrivacyPolicy />} />
+          <Route path="/faqs" element={<FAQs />} />
+          <Route path="/termsConditions" element={<TermsConditions />} />
         </Route>
         {/* --- ROUTES WITHOUT HEADER/FOOTER --- */}
         <Route path="/login" element={<LoginPage />} />
