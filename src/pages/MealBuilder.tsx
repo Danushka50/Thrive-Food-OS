@@ -1,21 +1,32 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import IngredientModal from '../modals/IngredientModal';
 import foodPlate from '../assets/food-plate.png';
 import { getFoodOsIngredients, getFoodOsLocations } from '../services/mealBuilderService';
-import { createEmptyMacros } from '../utils/nutrition';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+  addPlateItem,
+  removePlateItem,
+  selectLocation,
+  setCheckoutDraft,
+  setMealName,
+  setSelectedDelivery,
+} from '../store/slices/mealBuilderSlice';
+import { createEmptyMacros, getPlateItemMacros } from '../utils/nutrition';
 import type {
+  CustomerOrderDraft,
   PlateItem,
   ThriveIngredient,
   ThriveIngredientCategory,
+  ThriveIngredientQuantity,
   ThriveIngredientsMeta,
   ThriveIngredientsResponse,
   ThriveLocation,
 } from '../types/types';
+import { readCustomerSession } from '../utils/storage';
 import './MealBuilder.css';
 
-const LOCATION_STORAGE_KEY = 'thrive-food-os:selected-location';
-const MAX_PLATE_ITEMS = 3;
+const MIN_CHECKOUT_ITEMS = 3;
 
 const toDisplayText = (value: string) =>
   value
@@ -27,6 +38,15 @@ const toDisplayText = (value: string) =>
 const formatPrice = (amount: number, currency = 'LKR') =>
   `${currency} ${new Intl.NumberFormat('en-LK', { maximumFractionDigits: 0 }).format(amount)}`;
 
+const PREVIEW_100G_QUANTITY: ThriveIngredientQuantity = {
+  id: 'preview-100g',
+  quantity_value: '100g',
+  quantity_grams: 100,
+  price: 0,
+  is_available: true,
+  currency: 'LKR',
+};
+
 const formatMacroValue = (value: number) => {
   const roundedValue = Math.round(value * 10) / 10;
 
@@ -36,6 +56,33 @@ const formatMacroValue = (value: number) => {
 
   return Number.isInteger(roundedValue) ? `${roundedValue}` : roundedValue.toFixed(1);
 };
+
+const formatGramsLabel = (grams: number) => {
+  if (!grams) {
+    return '';
+  }
+
+  return `${Number.isInteger(grams) ? grams : Number(grams.toFixed(1))}g`;
+};
+
+const formatPlateItemQuantity = (item: PlateItem) => {
+  const gramsLabel = formatGramsLabel(item.grams);
+
+  if (!gramsLabel) {
+    return item.quantity_label;
+  }
+
+  const normalizedQuantity = item.quantity_label.replace(/\s+/g, '').toLowerCase();
+
+  if (normalizedQuantity === gramsLabel.toLowerCase()) {
+    return gramsLabel;
+  }
+
+  return item.quantity_label ? `${item.quantity_label} / ${gramsLabel}` : gramsLabel;
+};
+
+const getPlateItemTags = (item: PlateItem) =>
+  [item.variant, item.specification || item.quantity_label, item.cook_style].filter(Boolean);
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (
@@ -59,20 +106,35 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
+const formatIngredientKcalPer100g = (ingredient: ThriveIngredient) => {
+  const kcalPer100g = getPlateItemMacros(ingredient, PREVIEW_100G_QUANTITY).kcal;
+
+  if (kcalPer100g <= 0) {
+    return 'kcal/100g pending';
+  }
+
+  return `${formatMacroValue(kcalPer100g)} kcal/100g`;
+};
+
 const MealBuilder: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const catalogCacheRef = useRef<Record<string, ThriveIngredientsResponse>>({});
+  const checkoutTimeoutRef = useRef<number | null>(null);
   const [locations, setLocations] = useState<ThriveLocation[]>([]);
-  const [selectedLocationId, setSelectedLocationId] = useState('');
   const [catalog, setCatalog] = useState<ThriveIngredientCategory[]>([]);
   const [catalogMeta, setCatalogMeta] = useState<ThriveIngredientsMeta | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
-  const [plateItems, setPlateItems] = useState<PlateItem[]>([]);
-  const [selectedDelivery, setSelectedDelivery] = useState('now');
   const [activeIngredient, setActiveIngredient] = useState<ThriveIngredient | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
   const [isLoadingLocations, setIsLoadingLocations] = useState(true);
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const selectedLocationId = useAppSelector((state) => state.mealBuilder.selectedLocationId);
+  const plateItems = useAppSelector((state) => state.mealBuilder.plateItems);
+  const selectedDelivery = useAppSelector((state) => state.mealBuilder.selectedDelivery);
+  const mealName = useAppSelector((state) => state.mealBuilder.mealName);
 
   useEffect(() => {
     let isMounted = true;
@@ -100,13 +162,11 @@ const MealBuilder: React.FC = () => {
         setLocations(locationData);
 
         if (!locationData.length) {
-          setSelectedLocationId('');
+          dispatch(selectLocation(''));
           return;
         }
 
-        const storedLocationId = window.localStorage.getItem(LOCATION_STORAGE_KEY);
-        if (storedLocationId && locationData.some((location) => location.id === storedLocationId)) {
-          setSelectedLocationId(storedLocationId);
+        if (selectedLocationId && locationData.some((location) => location.id === selectedLocationId)) {
           return;
         }
 
@@ -123,7 +183,7 @@ const MealBuilder: React.FC = () => {
           }
         }
 
-        setSelectedLocationId(preferredLocationId);
+        dispatch(selectLocation(preferredLocationId));
       } catch (error) {
         if (!isMounted) {
           return;
@@ -143,7 +203,7 @@ const MealBuilder: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [dispatch, selectedLocationId]);
 
   useEffect(() => {
     if (!selectedLocationId) {
@@ -188,7 +248,6 @@ const MealBuilder: React.FC = () => {
         });
         setActiveIngredient(null);
         setModalOpen(false);
-        window.localStorage.setItem(LOCATION_STORAGE_KEY, selectedLocationId);
       } catch (error) {
         if (!isMounted) {
           return;
@@ -211,6 +270,14 @@ const MealBuilder: React.FC = () => {
     };
   }, [selectedLocationId]);
 
+  useEffect(() => {
+    return () => {
+      if (checkoutTimeoutRef.current !== null) {
+        window.clearTimeout(checkoutTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const currentLocation =
     locations.find((location) => location.id === selectedLocationId) || catalogMeta?.location || null;
   const selectedCategory =
@@ -218,6 +285,7 @@ const MealBuilder: React.FC = () => {
   const categoryIngredients = selectedCategory?.ingredients || [];
   const totalPrice = plateItems.reduce((sum, item) => sum + item.price, 0);
   const plateCurrency = currentLocation?.currency || plateItems[0]?.currency || 'LKR';
+  const hasCheckoutMinimum = plateItems.length >= MIN_CHECKOUT_ITEMS;
   const totalMacros = plateItems.reduce((totals, item) => {
     totals.protein += item.macros.protein || 0;
     totals.carbs += item.macros.carbs || 0;
@@ -238,10 +306,6 @@ const MealBuilder: React.FC = () => {
   };
 
   const openIngredientModal = (ingredient: ThriveIngredient) => {
-    if (plateItems.length >= MAX_PLATE_ITEMS) {
-      return;
-    }
-
     setActiveIngredient(ingredient);
     setModalOpen(true);
   };
@@ -253,14 +317,11 @@ const MealBuilder: React.FC = () => {
 
   const handleDragOver = (event: React.DragEvent) => {
     event.preventDefault();
-    event.dataTransfer.dropEffect = plateItems.length >= MAX_PLATE_ITEMS ? 'none' : 'move';
+    event.dataTransfer.dropEffect = 'move';
   };
 
   const handleDropOnPlate = (event: React.DragEvent) => {
     event.preventDefault();
-    if (plateItems.length >= MAX_PLATE_ITEMS) {
-      return;
-    }
 
     const ingredientId = event.dataTransfer.getData('ingredientId');
     const ingredient = findIngredientById(ingredientId);
@@ -271,23 +332,45 @@ const MealBuilder: React.FC = () => {
   };
 
   const handleAddToPlate = (item: PlateItem) => {
-    setPlateItems((previousItems) => {
-      if (previousItems.length >= MAX_PLATE_ITEMS) {
-        return previousItems;
-      }
-
-      return [...previousItems, item];
-    });
+    dispatch(addPlateItem(item));
   };
 
   const handleRemoveItem = (id: string) => {
-    setPlateItems((previousItems) => previousItems.filter((item) => item.id !== id));
+    dispatch(removePlateItem(id));
+  };
+
+  const handleProceedToCheckout = () => {
+    if (!hasCheckoutMinimum || isCheckoutLoading || !currentLocation) {
+      return;
+    }
+
+    const draft: CustomerOrderDraft = {
+      meal_name: mealName.trim() || 'Custom Thrive Plate',
+      location_id: currentLocation.id,
+      location_name: currentLocation.name,
+      total_price: totalPrice,
+      delivery_type: selectedDelivery,
+      plate_items: plateItems,
+      created_at: new Date().toISOString(),
+    };
+
+    dispatch(setCheckoutDraft(draft));
+    setIsCheckoutLoading(true);
+
+    checkoutTimeoutRef.current = window.setTimeout(() => {
+      const customerSession = readCustomerSession();
+
+      setIsCheckoutLoading(false);
+      navigate(customerSession ? '/order' : '/signUp?redirect=%2Forder');
+    }, 300);
   };
 
   const instructionText = isLoadingIngredients
     ? 'LOADING INGREDIENTS FROM THRIVE_BACKEND'
-    : plateItems.length >= MAX_PLATE_ITEMS
-      ? 'PLATE READY. REMOVE AN ITEM TO CHANGE IT'
+    : isCheckoutLoading
+      ? 'OPENING CHECKOUT...'
+    : hasCheckoutMinimum
+      ? 'READY FOR CHECKOUT. ADD OR REMOVE ITEMS ANYTIME'
       : 'DRAG INGREDIENTS TO YOUR PLATE';
 
   return (
@@ -299,7 +382,7 @@ const MealBuilder: React.FC = () => {
             <select
               className="location-select"
               value={selectedLocationId}
-              onChange={(event) => setSelectedLocationId(event.target.value)}
+              onChange={(event) => dispatch(selectLocation(event.target.value))}
               disabled={isLoadingLocations || !locations.length}
             >
               {locations.length ? null : <option value="">No locations found</option>}
@@ -309,10 +392,6 @@ const MealBuilder: React.FC = () => {
                 </option>
               ))}
             </select>
-            <div className="location-meta">
-              <span>{currentLocation?.location_type || 'Kitchen'}</span>
-              <span>{catalogMeta?.total_ingredients ?? 0} live ingredients</span>
-            </div>
           </div>
 
           <h5 className="sidebar-title">INGREDIENTS</h5>
@@ -324,7 +403,6 @@ const MealBuilder: React.FC = () => {
                 onClick={() => setSelectedCategoryId(category.category_id || '')}
               >
                 <span>{toDisplayText(category.category_name)}</span>
-                <small>{category.ingredient_count}</small>
               </button>
             ))}
           </div>
@@ -336,26 +414,17 @@ const MealBuilder: React.FC = () => {
               <div className="ingredient-empty-state">Loading location-wise ingredient catalog...</div>
             ) : categoryIngredients.length ? (
               categoryIngredients.map((ingredient) => {
-                const defaultQuantity = ingredient.default_quantity || ingredient.quantities[0] || null;
-
                 return (
                   <div
                     key={ingredient.id}
                     className="ingredient-card"
-                    draggable={plateItems.length < MAX_PLATE_ITEMS}
+                    draggable
                     onDragStart={(event) => handleDragStart(event, ingredient)}
                     onClick={() => openIngredientModal(ingredient)}
                   >
                     <div className="ing-info">
                       <span className="ing-name">{ingredient.name}</span>
-                      <span className="ing-cal">
-                        {defaultQuantity
-                          ? `${defaultQuantity.quantity_value} • ${formatPrice(
-                              defaultQuantity.price,
-                              defaultQuantity.currency,
-                            )}`
-                          : 'Quantity setup pending'}
-                      </span>
+                      <span className="ing-cal">{formatIngredientKcalPer100g(ingredient)}</span>
                     </div>
                     <button
                       className="drag-btn"
@@ -426,7 +495,7 @@ const MealBuilder: React.FC = () => {
               })}
             </div>
             <p className="build-step">
-              Build your meal ({plateItems.length}/{MAX_PLATE_ITEMS})
+              Build your meal ({plateItems.length} item{plateItems.length !== 1 ? 's' : ''})
             </p>
           </div>
 
@@ -492,16 +561,16 @@ const MealBuilder: React.FC = () => {
                   <span>Location</span>
                 </div>
                 <div className="s-macro">
-                  <strong>{plateItems.length}/{MAX_PLATE_ITEMS}</strong>
+                  <strong>{plateItems.length}</strong>
                   <span>On Plate</span>
                 </div>
               </div>
 
               <div className="suggestion-footer">
                 <span className="suggestion-price">{formatPrice(totalPrice, plateCurrency)}</span>
-                <Link to="/order">
-                  <button className="buy-now-btn">Buy Now</button>
-                </Link>
+                <button className="buy-now-btn" onClick={handleProceedToCheckout}>
+                  Buy Now
+                </button>
               </div>
             </div>
           </div>
@@ -521,15 +590,18 @@ const MealBuilder: React.FC = () => {
                 <div key={item.id} className="selected-item">
                   <div className="item-main">
                     <strong>{item.name}</strong>
-                    <span>{item.grams ? `${item.quantity_label} / ${item.grams}g` : item.quantity_label}</span>
+                    <span>{formatPlateItemQuantity(item)}</span>
                   </div>
                   <div className="item-tags">
-                    <span className="tag-accent">{item.specification || item.quantity_label}</span>
-                    <span className="tag-accent">{item.cook_style}</span>
-                    <button className="remove-item" onClick={() => handleRemoveItem(item.id)}>
-                      &times;
-                    </button>
+                    {getPlateItemTags(item).map((tag) => (
+                      <span key={`${item.id}-${tag}`} className="tag-accent">
+                        {tag}
+                      </span>
+                    ))}
                   </div>
+                  <button className="remove-item" onClick={() => handleRemoveItem(item.id)}>
+                    &times;
+                  </button>
                 </div>
               ))
             ) : (
@@ -544,7 +616,12 @@ const MealBuilder: React.FC = () => {
 
           <div className="name-meal-input">
             <p>Every meal you build gets a name and a place in our community.</p>
-            <input type="text" placeholder="Name your meal" />
+            <input
+              type="text"
+              placeholder="Name your meal"
+              value={mealName}
+              onChange={(event) => dispatch(setMealName(event.target.value))}
+            />
           </div>
 
           <div className="delivery-options">
@@ -552,7 +629,7 @@ const MealBuilder: React.FC = () => {
             <div className="delivery-buttons">
               <button
                 className={`delivery-btn order-now-btn ${selectedDelivery === 'now' ? 'active' : ''}`}
-                onClick={() => setSelectedDelivery('now')}
+                onClick={() => dispatch(setSelectedDelivery('now'))}
               >
                 <div className="opt-text">
                   <strong>Order Now</strong>
@@ -563,7 +640,7 @@ const MealBuilder: React.FC = () => {
 
               <button
                 className={`delivery-btn ${selectedDelivery === 'schedule' ? 'active' : ''}`}
-                onClick={() => setSelectedDelivery('schedule')}
+                onClick={() => dispatch(setSelectedDelivery('schedule'))}
               >
                 <div className="opt-text">
                   <strong>Schedule</strong>
@@ -574,11 +651,17 @@ const MealBuilder: React.FC = () => {
             </div>
           </div>
 
-          <button className="add-more-btn" disabled={plateItems.length < MAX_PLATE_ITEMS}>
-            {plateItems.length >= MAX_PLATE_ITEMS
-              ? 'Complete - Proceed to Checkout'
-              : `Add ${Math.max(0, MAX_PLATE_ITEMS - plateItems.length)} More item${
-                  plateItems.length >= MAX_PLATE_ITEMS - 1 ? '' : 's'
+          <button
+            className="add-more-btn"
+            disabled={!hasCheckoutMinimum || isCheckoutLoading}
+            onClick={handleProceedToCheckout}
+          >
+            {isCheckoutLoading
+              ? 'Loading...'
+              : hasCheckoutMinimum
+                ? 'Complete - Proceed to Checkout'
+              : `Add ${Math.max(0, MIN_CHECKOUT_ITEMS - plateItems.length)} More item${
+                  MIN_CHECKOUT_ITEMS - plateItems.length === 1 ? '' : 's'
                 } to Order`}
           </button>
         </aside>

@@ -12,14 +12,57 @@ interface ModalProps {
 const formatPrice = (amount: number, currency = 'LKR') =>
   `${currency} ${new Intl.NumberFormat('en-LK', { maximumFractionDigits: 0 }).format(amount)}`;
 
+const formatMetricValue = (value: number) => {
+  const roundedValue = Math.round(value * 10) / 10;
+  return Number.isInteger(roundedValue) ? `${roundedValue}` : roundedValue.toFixed(1);
+};
+
+const formatDisplayName = (value: string) =>
+  value
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+const createPlateItemId = (
+  ingredientId: string,
+  variant: string,
+  quantityId: string,
+  cookTypeId: string,
+) => `${ingredientId}-${variant || 'default'}-${quantityId}-${cookTypeId || 'default'}-${crypto.randomUUID()}`;
+
+const getQuantityDisplay = (quantityValue: string, quantityGrams: number | null) => {
+  if (quantityGrams && quantityGrams > 0) {
+    return {
+      amount: formatMetricValue(quantityGrams),
+      unit: 'Grams',
+    };
+  }
+
+  const matchedGrams = quantityValue.match(/(\d+(?:\.\d+)?)\s*(?:g|gram|grams)\b/i);
+  if (matchedGrams) {
+    return {
+      amount: formatMetricValue(Number(matchedGrams[1])),
+      unit: 'Grams',
+    };
+  }
+
+  return {
+    amount: quantityValue || '-',
+    unit: 'Portion',
+  };
+};
+
 const IngredientModal: React.FC<ModalProps> = ({ ingredient, onClose, onAddToPlate }) => {
   const availableQuantities = ingredient.quantities.filter((quantity) => quantity.is_available !== false);
   const quantityOptions = availableQuantities.length ? availableQuantities : ingredient.quantities;
   const defaultQuantityId = ingredient.default_quantity?.id || quantityOptions[0]?.id || '';
+  const defaultVariant = ingredient.variants[0] || '';
   const defaultSpecificationId = ingredient.specifications[0]?.id || '';
   const defaultCookTypeId = ingredient.cook_types[0]?.id || '';
 
   const [selectedQuantityId, setSelectedQuantityId] = useState(defaultQuantityId);
+  const [selectedVariant, setSelectedVariant] = useState(defaultVariant);
   const [selectedSpecificationId, setSelectedSpecificationId] = useState(defaultSpecificationId);
   const [selectedCookTypeId, setSelectedCookTypeId] = useState(defaultCookTypeId);
 
@@ -34,15 +77,42 @@ const IngredientModal: React.FC<ModalProps> = ({ ingredient, onClose, onAddToPla
     ingredient.cook_types[0] ||
     null;
 
+  const selectedQuantityIndex = quantityOptions.findIndex((quantity) => quantity.id === selectedQuantity?.id);
+  const activeQuantityIndex = selectedQuantityIndex >= 0 ? selectedQuantityIndex : 0;
+  const quantityDisplay = getQuantityDisplay(
+    selectedQuantity?.quantity_value || '',
+    selectedQuantity?.quantity_grams || null,
+  );
+  const selectedMacros = getPlateItemMacros(ingredient, selectedQuantity);
+
+  const handleQuantityStep = (direction: -1 | 1) => {
+    if (!quantityOptions.length) {
+      return;
+    }
+
+    const nextIndex = activeQuantityIndex + direction;
+    if (nextIndex < 0 || nextIndex >= quantityOptions.length) {
+      return;
+    }
+
+    setSelectedQuantityId(quantityOptions[nextIndex].id);
+  };
+
   const handleAddToPlate = () => {
     if (!selectedQuantity) {
       return;
     }
 
     const newItem: PlateItem = {
-      id: `${ingredient.id}-${selectedQuantity.id}-${selectedCookType?.id || 'default'}-${Date.now()}`,
+      id: createPlateItemId(
+        ingredient.id,
+        selectedVariant,
+        selectedQuantity.id,
+        selectedCookType?.id || 'default',
+      ),
       ingredient_id: ingredient.id,
       name: ingredient.name,
+      variant: selectedVariant,
       specification: selectedSpecification?.name || '',
       quantity_label: selectedQuantity.quantity_value,
       grams: selectedQuantity.quantity_grams || 0,
@@ -50,7 +120,7 @@ const IngredientModal: React.FC<ModalProps> = ({ ingredient, onClose, onAddToPla
       price: selectedQuantity.price,
       currency: selectedQuantity.currency,
       image: ingredient.photo_url || null,
-      macros: getPlateItemMacros(ingredient, selectedQuantity),
+      macros: selectedMacros,
     };
 
     onAddToPlate(newItem);
@@ -61,35 +131,41 @@ const IngredientModal: React.FC<ModalProps> = ({ ingredient, onClose, onAddToPla
     <div className="modal-overlay">
       <div className="ingredient-modal">
         <div className="modal-header">
-          <div>
-            <h3>{ingredient.name}</h3>
-            <p className="modal-subtitle">
-              {ingredient.location_name || ingredient.category_name || ingredient.food_type_name || 'Live ingredient'}
-            </p>
-          </div>
-          <button className="close-x" onClick={onClose}>
+          <h3>{formatDisplayName(ingredient.name)}</h3>
+          <button className="close-x" onClick={onClose} type="button">
             &times;
           </button>
         </div>
 
         <div className="modal-body">
-          {ingredient.description ? (
-            <p className="ingredient-description">{ingredient.description}</p>
-          ) : (
-            <p className="ingredient-description">
-              This ingredient is coming directly from the Thrive_Backend location catalog.
-            </p>
-          )}
+          {ingredient.variants.length ? (
+            <section className="selection-group">
+              <label>SELECT VARIANT</label>
+              <div className="option-grid wrap">
+                {ingredient.variants.map((variant) => (
+                  <button
+                    key={variant}
+                    className={`opt-btn ${selectedVariant === variant ? 'active' : ''}`}
+                    onClick={() => setSelectedVariant(variant)}
+                    type="button"
+                  >
+                    {variant}
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           {ingredient.show_specification && ingredient.specifications.length ? (
             <section className="selection-group">
-              <label>SELECT SPECIFICATION</label>
+              <label>SELECT CUT</label>
               <div className="option-grid wrap">
                 {ingredient.specifications.map((specification) => (
                   <button
                     key={specification.id}
                     className={`opt-btn ${selectedSpecification?.id === specification.id ? 'active' : ''}`}
                     onClick={() => setSelectedSpecificationId(specification.id)}
+                    type="button"
                   >
                     {specification.name}
                   </button>
@@ -99,19 +175,29 @@ const IngredientModal: React.FC<ModalProps> = ({ ingredient, onClose, onAddToPla
           ) : null}
 
           <section className="selection-group">
-            <label>SELECT QUANTITY</label>
+            <label>QUANTITY</label>
             {quantityOptions.length ? (
-              <div className="option-grid wrap">
-                {quantityOptions.map((quantity) => (
-                  <button
-                    key={quantity.id}
-                    className={`opt-btn quantity-option ${selectedQuantity?.id === quantity.id ? 'active' : ''}`}
-                    onClick={() => setSelectedQuantityId(quantity.id)}
-                  >
-                    <strong>{quantity.quantity_value}</strong>
-                    <span>{formatPrice(quantity.price, quantity.currency)}</span>
-                  </button>
-                ))}
+              <div className="quantity-stepper">
+                <button
+                  className="stepper-btn"
+                  disabled={activeQuantityIndex <= 0}
+                  onClick={() => handleQuantityStep(-1)}
+                  type="button"
+                >
+                  -
+                </button>
+                <div className="quantity-display">
+                  <strong>{quantityDisplay.amount}</strong>
+                  <span>{quantityDisplay.unit}</span>
+                </div>
+                <button
+                  className="stepper-btn"
+                  disabled={activeQuantityIndex >= quantityOptions.length - 1}
+                  onClick={() => handleQuantityStep(1)}
+                  type="button"
+                >
+                  +
+                </button>
               </div>
             ) : (
               <p className="modal-note">This ingredient does not have a quantity configured yet.</p>
@@ -127,36 +213,32 @@ const IngredientModal: React.FC<ModalProps> = ({ ingredient, onClose, onAddToPla
                     key={cookType.id}
                     className={`opt-btn ${selectedCookType?.id === cookType.id ? 'active' : ''}`}
                     onClick={() => setSelectedCookTypeId(cookType.id)}
+                    type="button"
                   >
                     {cookType.name}
                   </button>
                 ))}
               </div>
             </section>
-          ) : (
-            <section className="selection-group">
-              <label>COOK STYLE</label>
-              <p className="modal-note">Kitchen default preparation will be used for this ingredient.</p>
-            </section>
-          )}
+          ) : null}
         </div>
 
         <div className="modal-macros-row">
           <div className="m-unit">
-            <strong>{selectedQuantity?.quantity_grams ? `${selectedQuantity.quantity_grams}g` : selectedQuantity?.quantity_value || '-'}</strong>
-            <span>Portion</span>
+            <strong>{formatMetricValue(selectedMacros.protein)}g</strong>
+            <span>Protein</span>
           </div>
           <div className="m-unit">
-            <strong>{selectedQuantity ? formatPrice(selectedQuantity.price, selectedQuantity.currency) : '-'}</strong>
-            <span>Price</span>
+            <strong>{formatMetricValue(selectedMacros.carbs)}g</strong>
+            <span>Carbs</span>
           </div>
           <div className="m-unit">
-            <strong>{selectedSpecification?.name || '-'}</strong>
-            <span>Spec</span>
+            <strong>{formatMetricValue(selectedMacros.fats)}g</strong>
+            <span>Fats</span>
           </div>
           <div className="m-unit">
-            <strong>{selectedCookType?.name || 'Default'}</strong>
-            <span>Cook</span>
+            <strong>{formatMetricValue(selectedMacros.kcal)}</strong>
+            <span>Kcal</span>
           </div>
         </div>
 
@@ -166,10 +248,10 @@ const IngredientModal: React.FC<ModalProps> = ({ ingredient, onClose, onAddToPla
             <strong>{selectedQuantity ? formatPrice(selectedQuantity.price, selectedQuantity.currency) : 'Pending'}</strong>
           </div>
           <div className="modal-actions">
-            <button className="cancel-btn" onClick={onClose}>
+            <button className="cancel-btn" onClick={onClose} type="button">
               Cancel
             </button>
-            <button className="add-plate-btn" onClick={handleAddToPlate} disabled={!selectedQuantity}>
+            <button className="add-plate-btn" onClick={handleAddToPlate} disabled={!selectedQuantity} type="button">
               Add to Plate
             </button>
           </div>

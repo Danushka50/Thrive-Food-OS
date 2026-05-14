@@ -8,12 +8,30 @@ export interface UserData {
   gender?: string;
 }
 
+export interface CustomerProfile {
+  id?: string;
+  location_id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  dob?: string;
+  gender?: string;
+}
+
+export interface CustomerSession {
+  token?: string;
+  user?: CustomerProfile;
+  authenticated_at: string;
+}
+
 export interface AuthResponse {
   success: boolean;
   message: string;
   exists?: boolean;
   verified?: boolean;
   token?: string;
+  user?: CustomerProfile;
 }
 
 export interface ThriveLocation {
@@ -60,6 +78,7 @@ export interface ThriveIngredient {
   category_name: string;
   food_type_id: string | null;
   food_type_name: string | null;
+  variants: string[];
   specifications: ThriveIngredientOption[];
   cook_types: ThriveIngredientOption[];
   photo_url: string | null;
@@ -74,6 +93,7 @@ export interface ThriveFoodTypeSummary {
   id: string;
   source_id: string;
   name: string;
+  variants?: string[];
   category_id: string | null;
   location_id: string | null;
   is_global: boolean;
@@ -130,6 +150,7 @@ export interface PlateItem {
   id: string;
   ingredient_id: string;
   name: string;
+  variant: string;
   specification: string;
   quantity_label: string;
   grams: number;
@@ -138,4 +159,95 @@ export interface PlateItem {
   currency: string;
   image: string | null;
   macros: PlateItemMacros;
+}
+
+export interface CustomerOrderDraft {
+  meal_name: string;
+  location_id: string;
+  location_name: string;
+  total_price: number;
+  delivery_type: 'now' | 'schedule';
+  plate_items: PlateItem[];
+  created_at: string;
+}
+
+export interface FoodOsOrderMetadata {
+  source: 'thrive-food-os';
+  meal_name: string;
+  delivery_type: 'now' | 'schedule';
+  location_name: string;
+  total_price: number;
+  created_at: string;
+  realtime_token?: string;
+  plate_items: PlateItem[];
+}
+
+export interface FoodOsCreateOrderPayload {
+  location_id: string;
+  customer_id?: string;
+  notes?: string;
+  items: {
+    menu_item_id?: string;
+    quantity: number;
+    unit_price: number;
+    notes?: string;
+  }[];
+}
+
+export interface ChefUser {
+  id: string;
+  location_id: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'manager' | 'staff' | 'kitchen_staff';
+  account_status: 'active' | 'inactive' | 'suspended';
+  created_at: string;
+  updated_at: string;
+  location_name?: string;
+}
+
+export interface ChefSession {
+  token: string;
+  user: ChefUser;
+}
+
+export type ChefOrderStatus =
+  | 'received'
+  | 'accepted'
+  | 'preparing'
+  | 'ready'
+  | 'delivered'
+  | 'cancelled';
+
+export interface ChefOrderItem {
+  id: string;
+  order_id: string;
+  menu_item_id?: string | null;
+  menu_item_name?: string | null;
+  menu_item_description?: string | null;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  notes?: string | null;
+  created_at: string;
+}
+
+export interface ChefOrder {
+  id: string;
+  location_id: string;
+  customer_id?: string | null;
+  order_number?: string;
+  status: ChefOrderStatus;
+  total_price: number;
+  notes?: string | null;
+  order_date: string;
+  delivered_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  customer_name?: string | null;
+  customer_email?: string | null;
+  customer_phone?: string | null;
+  location_name?: string | null;
+  items?: ChefOrderItem[];
+  metadata?: FoodOsOrderMetadata | null;
 }
